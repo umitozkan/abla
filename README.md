@@ -87,27 +87,28 @@ Alan adının DNS panelinde **A / `abla` / `207.180.223.77`** kaydını ekleyin.
 
 ### 2. Projeyi kurun
 
+Sunucudaki mevcut proje dizini `/root/abla` olarak kabul edilir. Repo zaten klonlandıysa yeniden klonlamayın; aşağıdaki komutlar mevcut dizinden devam eder. Tamamen yeni bir sunucuda önce `git clone https://github.com/umitozkan/abla.git /root/abla` çalıştırılabilir.
+
 ```sh
-cd /opt
-git clone https://github.com/umitozkan/abla.git
-cd /opt/abla
-python3 scripts/setup_env.py --production
+cd /root/abla
+git pull --ff-only origin main
+test -e .env || python3 scripts/setup_env.py --production
 docker compose config -q
 docker compose up -d --build --wait --wait-timeout 180
 docker compose ps
 curl --fail http://127.0.0.1:18082/health
 ```
 
-`setup_env.py` yeni `.env` dosyasını 600 izniyle ve üç ayrı rastgele sırla oluşturur. Var olan dosyanın üzerine yazmaz. Üretim ayarları otomatik gelir: `COMPOSE_PROJECT_NAME=abla`, `APP_PORT=18082`, `APP_ENV=production`, `COOKIE_SECURE=true`, `ALLOWED_HOSTS=abla.umitozkan.com.tr,localhost,127.0.0.1`. Alanların açıklaması `.env.production.example` içindedir. Sunucuda Python3/Git yoksa dağıtımın paket yöneticisiyle kurun.
+Mevcut `.env` korunur. `setup_env.py` yeni `.env` dosyasını 600 izniyle ve üç ayrı rastgele sırla oluşturur. Var olan dosyanın üzerine yazmaz. Üretim ayarları otomatik gelir: `COMPOSE_PROJECT_NAME=abla`, `APP_PORT=18082`, `APP_ENV=production`, `COOKIE_SECURE=true`, `ALLOWED_HOSTS=abla.umitozkan.com.tr,localhost,127.0.0.1`. Alanların açıklaması `.env.production.example` içindedir. Sunucuda Python3/Git yoksa dağıtımın paket yöneticisiyle kurun.
 
-İlk giriş kullanıcı adları `yonetici` ve `emine`; şifreleri yalnız kendi sunucu terminalinizde `/opt/abla/.env` dosyasından okuyun ve parola yöneticinize kaydedin. Yerel `.env`, fişler, veritabanı ve TEST kayıtları GitHub'a gönderilmez. Yeni sunucu boş bir veritabanı ile başlar. `.env` şifresini sonradan değiştirmek mevcut hesaba uygulanmaz.
+İlk giriş kullanıcı adları `yonetici` ve `emine`; şifreleri yalnız kendi sunucu terminalinizde `/root/abla/.env` dosyasından okuyun ve parola yöneticinize kaydedin. Yerel `.env`, fişler, veritabanı ve TEST kayıtları GitHub'a gönderilmez. Yeni sunucu boş bir veritabanı ile başlar. `.env` şifresini sonradan değiştirmek mevcut hesaba uygulanmaz.
 
 ### 3. HTTP doğrulama adresini açın
 
 `nginx -t` başarılı olmalı ve 18082 başka bir servis tarafından kullanılmamalı. Herhangi bir komut hata verirse sonraki aşamaya geçmeyin. Aşağıdaki alt kabuk yalnız yeni `abla` site dosyasını oluşturur; mevcut aynı adlı dosya varsa durur.
 
 ```sh
-cd /opt/abla
+cd /root/abla
 (
   set -eu
   command -v nginx
@@ -141,7 +142,7 @@ Sertifika öncesi bu site yalnız ACME doğrulama dosyalarını sunar, diğer is
 DNS'in hedef sunucuya yönlendiğinden emin olun. Certbot zaten kuruluysa paket kurulumunu atlayın; kurulu değilse Ubuntu/Debian için `apt-get update && apt-get install -y certbot` çalıştırın. Certbot ilk çalıştırmada e-posta ve hizmet koşulları hakkında sorular sorabilir.
 
 ```sh
-cd /opt/abla
+cd /root/abla
 certbot certonly --webroot -w /var/www/letsencrypt \
   --cert-name abla.umitozkan.com.tr -d abla.umitozkan.com.tr \
   --deploy-hook 'nginx -t && systemctl reload nginx'
@@ -150,7 +151,7 @@ certbot certonly --webroot -w /var/www/letsencrypt \
 Sertifika başarıyla oluşturulduktan sonra:
 
 ```sh
-cd /opt/abla
+cd /root/abla
 (
   set -eu
   test -s /etc/letsencrypt/live/abla.umitozkan.com.tr/fullchain.pem
@@ -177,7 +178,7 @@ Nginx örneği gerçek istemci IP'sini iletir, dışarıdan gelen `X-Forwarded-F
 Önce yukarıdaki yedekleme komutuyla yedek alın. Aynı dizinde ve aynı `.env` ile:
 
 ```sh
-cd /opt/abla
+cd /root/abla
 git pull --ff-only origin main
 docker compose up -d --build --wait --wait-timeout 180
 docker compose ps

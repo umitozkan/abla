@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import token with context %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">Mutfağın günlük defteri</p><h1>{{ 'Merhaba, Emine.' if user.role == 'emine' else 'Mutfağa genel bakış' }}</h1><p>Bir gün aç, yemeklerini ve emeğini kaydet.</p></div><span class="date-pill">{{ today[8:10] }}.{{ today[5:7] }}.{{ today[:4] }}</span></section>
+<section class="today-card"><div><span class="eyebrow">Bugünün kaydı</span><h2>Haydi, mutfağa.</h2><p>Tek dokunuşla bugünün defterini aç.</p></div><form action="/days" method="post">{{ token() }}<input type="hidden" name="date" value="{{ today }}"><button class="button button-light" type="submit">Bugünü aç <span aria-hidden="true">→</span></button></form></section>
+<div class="section-heading"><h2>Günlük kayıtlar</h2><span class="count-label">{{ days|length }} kayıt</span></div>
+<div class="day-list">
+{% for day in days %}
+<a class="day-row" href="/days/{{ day.date }}"><div class="day-date"><strong>{{ day.date[8:10] }}</strong><span>{{ day.date[5:7] }} / {{ day.date[:4] }}</span></div><div class="day-description"><h3>{{ day.menu or 'Menü henüz eklenmedi' }}</h3><p>{{ day.delivered if day.delivered is not none else '—' }} porsiyon teslim edildi <span>·</span> {{ day.made if day.made is not none else '—' }} porsiyon yapıldı</p></div><div class="day-amount"><strong>{{ day.revenue_cents|money }}</strong><small>satış geliri</small></div><span class="row-arrow" aria-hidden="true">↗</span></a>
+{% else %}
+<div class="empty-state"><span class="empty-icon" aria-hidden="true">✎</span><h3>İlk sayfa seni bekliyor.</h3><p>Bugünün kaydını açarak başlayabilirsin.</p></div>
+{% endfor %}
+</div>
+<details class="card disclosure"><summary>Başka bir tarihe kayıt aç</summary><form class="details-body inline-form" action="/days" method="post">{{ token() }}<label class="field"><span>Tarih</span><input type="date" name="date" value="{{ today }}" required></label><button class="button button-secondary" type="submit">Günü aç</button></form></details>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}İşlem tamamlanamadı · Emine’nin Mutfağı{% endblock %}
+{% block content %}
+<section class="card error-card"><p class="eyebrow">{{ status_code|default(status_code_display) }}</p><h1>Bu işlem tamamlanamadı.</h1><p>{{ message }}</p><a class="button button-primary" href="{{ '/' if user else '/login' }}">{{ 'Günlük kayıtlara dön' if user else 'Giriş ekranına dön' }}</a></section>
+{% endblock %}

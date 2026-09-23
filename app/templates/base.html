@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#254a3c">
+  <title>{% block title %}Emine’nin Mutfağı{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">İçeriğe geç</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="/" class="brand" aria-label="Emine’nin Mutfağı ana sayfa">
+        <span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M7 17h18v3a9 9 0 0 1-18 0v-3Z" stroke="currentColor" stroke-width="2"/><path d="M5 17h22M11 28h10M12 12c-4-4 4-4 0-8m8 8c-4-4 4-4 0-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+        <span>Emine’nin Mutfağı<small>Her günün emeği değerli.</small></span>
+      </a>
+      {% if user %}
+      <div class="user-area"><span class="role-tag">{{ 'Yönetici' if user.role == 'admin' else 'Emine' }}</span><form action="/logout" method="post"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="text-button" type="submit">Çıkış</button></form></div>
+      {% endif %}
+    </div>
+    {% if user %}
+    <nav class="main-nav" aria-label="Ana menü">
+      <a href="/" {% if request.url.path == '/' or request.url.path.startswith('/days/') %}aria-current="page"{% endif %}>Günlük kayıtlar</a>
+      {% if user.role == 'admin' %}
+      <a href="/admin" {% if request.url.path == '/admin' or request.url.path == '/admin/scenario' %}aria-current="page"{% endif %}>Kazanç raporu</a>
+      <a href="/admin/settings" {% if request.url.path == '/admin/settings' %}aria-current="page"{% endif %}>Maliyet ayarları</a>
+      <a href="/admin/audit" {% if request.url.path == '/admin/audit' %}aria-current="page"{% endif %}>Değişiklikler</a>
+      {% endif %}
+    </nav>
+    {% endif %}
+  </header>
+  <main id="main" class="page {% block page_class %}{% endblock %}">
+    {% if notice is defined and notice %}<div class="notice" role="status">{{ notice }}</div>{% endif %}
+    {% if error is defined and error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">Emine’nin Mutfağı <span>·</span> Tüm saatler İstanbul saatidir.</footer>
+</body>
+</html>

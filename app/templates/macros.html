@@ -1,0 +1,35 @@
+{% macro token() %}<input type="hidden" name="csrf" value="{{ csrf }}">{% endmacro %}
+{% macro money_field(label, name, value=None, hint='', required=False) %}
+<label class="field"><span>{{ label }}</span><div class="input-unit"><input type="text" inputmode="decimal" name="{{ name }}" value="{{ '%.2f'|format(value / 100) if value is not none else '' }}" placeholder="0,00" {% if required %}required{% endif %} maxlength="16"><span>TL</span></div>{% if hint %}<small>{{ hint }}</small>{% endif %}</label>
+{% endmacro %}
+{% macro number_field(label, name, value=None, suffix='', hint='') %}
+<label class="field"><span>{{ label }}</span><div class="input-unit"><input type="number" inputmode="numeric" name="{{ name }}" value="{{ value if value is not none else '' }}" min="0" max="100000" step="1" placeholder="0">{% if suffix %}<span>{{ suffix }}</span>{% endif %}</div>{% if hint %}<small>{{ hint }}</small>{% endif %}</label>
+{% endmacro %}
+{% macro stat(label, value, note='', accent=False) %}
+<div class="stat{% if accent %} stat-accent{% endif %}"><span>{{ label }}</span><strong>{{ value }}</strong>{% if note %}<small>{{ note }}</small>{% endif %}</div>
+{% endmacro %}
+{% macro result_panel(result) %}
+<div class="section-heading"><div><p class="eyebrow">Günün hesabı</p><h2>Tahmini sonuç</h2></div><span class="badge {{ 'badge-warning' if result.missing else '' }}">{{ 'Eksik giriş var' if result.missing else 'Girişler tamam' }}</span></div>
+<p class="muted">Enerji maliyeti tahmindir. Bu hesap, girilen tutar ve sürelere dayanır.</p>
+<div class="stats-grid result-stats">
+  {{ stat('Satış geliri', result.revenue_cents|money, 'O gün kazanılan satış tutarı') }}
+  {{ stat('Emek ve diğer giderler öncesi', result.before_labor_other_cents|money, 'Satış − malzeme alışverişi') }}
+  {{ stat('Emek bedeli hariç kalan tutar', result.before_labor_cents|money, 'Diğer gider, enerji ve sabit pay sonrası') }}
+  {{ stat('Emek bedeli dâhil tahmini sonuç', result.result_cents|money, 'Kesin net kâr değildir.', True) }}
+</div>
+<dl class="calculation-list">
+  <div><dt>Malzeme alışverişi</dt><dd>{{ result.purchases_cents|money }}</dd></div>
+  <div><dt>Tahmini tüketilen malzeme</dt><dd>{{ result.material_cents|money }}</dd></div>
+  <div><dt>Diğer günlük giderler</dt><dd>{{ result.other_cents|money }}</dd></div>
+  <div><dt>Emek <small>({{ '%.2f'|format(result.labor_minutes / 60) }} saat)</small></dt><dd>{{ result.labor_cents|money }}</dd></div>
+  <div><dt>Enerji <span class="mini-tag">tahmin</span></dt><dd>{{ result.energy_cents|money }}</dd></div>
+  <div><dt>Sabit giderin günlük payı</dt><dd>{{ result.fixed_cents|money }}</dd></div>
+  <div><dt>Ekipman alımları <small>(sonuca katılmaz)</small></dt><dd>{{ result.equipment_cents|money }}</dd></div>
+  <div><dt>Tahmini kâr marjı</dt><dd>{{ ('%.1f'|format(result.margin_percent) ~ '%') if result.margin_percent is not none else '—' }}</dd></div>
+  <div><dt>Teslim edilen porsiyon başına satış</dt><dd>{{ result.price_per_portion_cents|money }}</dd></div>
+  <div><dt>Teslim edilen porsiyon başına maliyet</dt><dd>{{ result.cost_per_portion_cents|money }}</dd></div>
+  <div><dt>Teslim edilen porsiyon başına tahmini sonuç</dt><dd>{{ result.result_per_portion_cents|money }}</dd></div>
+</dl>
+{% if result.missing %}<div class="alert"><strong>Hesabı tamamlamak için</strong><ul>{% for missing in result.missing %}<li>{{ missing }}</li>{% endfor %}</ul><p>Eksik bilgiler nedeniyle tahmini sonuç değişebilir; günlük tutarlar eksikse hesaplanmayabilir.</p></div>{% endif %}
+<details class="disclosure"><summary>Hesap nasıl yapılıyor?</summary><div class="details-body"><ul class="formula-list">{% for formula in result.formulae %}<li>{{ formula }}</li>{% endfor %}</ul><p>Sabit gider dağıtımı: ilgili ayın toplam sabit gideri ÷ o aydaki takvim günü. Porsiyon hesaplarında teslim edilen porsiyon sayısı kullanılır.</p><p>Enerji: cihazın açık kaldığı süre × yönetici tarafından belirlenen tahmini saatlik maliyet. Sayaç ölçümü değildir.</p></div></details>
+{% endmacro %}

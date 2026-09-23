@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% from 'macros.html' import token with context %}
+{% block title %}Giriş · Emine’nin Mutfağı{% endblock %}
+{% block page_class %}login-page{% endblock %}
+{% block content %}
+<section class="login-welcome"><p class="eyebrow">Mutfağın günlük defteri</p><h1>Elinin lezzeti,<br>emeğinin karşılığı.</h1><p>Yemekleri, masrafları ve günün emeğini bir arada takip et.</p><div class="welcome-decoration" aria-hidden="true"><span class="plate"><span class="leaf leaf-one"></span><span class="leaf leaf-two"></span><span class="leaf leaf-three"></span></span><span class="decoration-caption">Bugün mutfakta ne var?</span></div></section>
+<section class="card login-card"><p class="eyebrow">Hoş geldin</p><h2>Defterini aç</h2><p class="muted">Kendi hesabınla güvenle giriş yap.</p><form action="/login" method="post" class="stack">{{ token() }}<label class="field"><span>Kullanıcı adı</span><input type="text" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus maxlength="100"></label><label class="field"><span>Şifre</span><input type="password" name="password" autocomplete="current-password" required maxlength="256"></label><button class="button button-primary button-wide" type="submit">Giriş yap <span aria-hidden="true">→</span></button></form><p class="fine-print">Emine ve yönetici, kendilerine ait kullanıcı adı ve şifreyle giriş yapar.</p></section>
+{% endblock %}

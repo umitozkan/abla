@@ -1,0 +1,35 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY değerini .env dosyasında doldurun}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-yonetici}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD değerini .env dosyasında doldurun}
+      EMINE_USERNAME: ${EMINE_USERNAME:-emine}
+      EMINE_PASSWORD: ${EMINE_PASSWORD:?EMINE_PASSWORD değerini .env dosyasında doldurun}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      DATA_DIR: /data
+      TZ: Europe/Istanbul
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:8000"
+    volumes:
+      - emine_data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+volumes:
+  emine_data:

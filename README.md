@@ -79,7 +79,7 @@ Geri yükleme tar yollarını, dosya türlerini, SQLite bütünlüğünü, uygul
 
 ## 207.180.223.77 sunucusunda yayın
 
-Aşağıdaki komutlar sunucuda `root` olarak, mevcut Nginx'in host üzerinde çalıştığı Ubuntu/Debian düzeni için hazırlanmıştır. Docker/Compose zaten mevcut. Yeni uygulama `127.0.0.1:18082` kullanır; paylaşılan servislerin `18000`, `18001`, `18080`, `3000`, `3002` portlarıyla çakışmaz. Compose proje adı `abla`, kalıcı volume `abla_emine_data` olur. Yerel geliştirme `8080` portunda kalır. Proje adı/aşağıdaki `.env` dosyası sonradan değiştirilmemelidir; farklı proje adı farklı volume açar. [Compose proje adı belgesi](https://docs.docker.com/compose/how-tos/project-name/).
+Aşağıdaki komutlar sunucuda `root` olarak, mevcut Nginx'in host üzerinde çalıştığı Ubuntu/Debian düzeni için hazırlanmıştır. Docker/Compose zaten mevcut; komutlarda servis sağlığını beklemek için güncel Compose v2/v5 `--wait` desteği kullanılır. Yeni uygulama `127.0.0.1:18082` kullanır; paylaşılan servislerin `18000`, `18001`, `18080`, `3000`, `3002` portlarıyla çakışmaz. Compose proje adı `abla`, kalıcı volume `abla_emine_data` olur. Yerel geliştirme `8080` portunda kalır. Proje adı/aşağıdaki `.env` dosyası sonradan değiştirilmemelidir; farklı proje adı farklı volume açar. [Compose proje adı belgesi](https://docs.docker.com/compose/how-tos/project-name/).
 
 ### 1. DNS
 
@@ -93,7 +93,7 @@ git clone https://github.com/umitozkan/abla.git
 cd /opt/abla
 python3 scripts/setup_env.py --production
 docker compose config -q
-docker compose up -d --build
+docker compose up -d --build --wait --wait-timeout 180
 docker compose ps
 curl --fail http://127.0.0.1:18082/health
 ```
@@ -111,6 +111,11 @@ cd /opt/abla
 (
   set -eu
   command -v nginx
+  nginx -t
+  if nginx -T 2>&1 | grep -Fq 'abla.umitozkan.com.tr'; then
+    echo 'Bu alan adı Nginx yapılandırmasında zaten var; mevcut bloğu kontrol edin.' >&2
+    exit 1
+  fi
   test -d /etc/nginx/sites-available
   test -d /etc/nginx/sites-enabled
   test ! -e /etc/nginx/sites-available/abla
@@ -120,8 +125,12 @@ cd /opt/abla
   install -d -m 755 /var/www/letsencrypt
   install -m 644 deploy/nginx-http.conf /etc/nginx/sites-available/abla
   ln -s /etc/nginx/sites-available/abla /etc/nginx/sites-enabled/abla
-  nginx -t
-  systemctl reload nginx
+  if nginx -t; then
+    systemctl reload nginx
+  else
+    rm /etc/nginx/sites-enabled/abla /etc/nginx/sites-available/abla
+    exit 1
+  fi
 )
 ```
 
@@ -170,7 +179,7 @@ Nginx örneği gerçek istemci IP'sini iletir, dışarıdan gelen `X-Forwarded-F
 ```sh
 cd /opt/abla
 git pull --ff-only origin main
-docker compose up -d --build
+docker compose up -d --build --wait --wait-timeout 180
 docker compose ps
 curl --fail https://abla.umitozkan.com.tr/health
 ```
